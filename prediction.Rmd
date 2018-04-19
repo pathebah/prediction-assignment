@@ -82,7 +82,7 @@ treeCm <- confusionMatrix(treePred,myTesting$classe)
 treeCm$overall
 ```
 
-The tree model is only 72% accurate. This is more than we would get by just flipping a coin but still fairly innacurate. Let us try another alogrithm to see if we can improve our prediction.
+The tree model is 72% accurate with an out of sample error rate of 28%. This is more than we would get by just flipping a coin but still fairly innacurate. Let us try another alogrithm to see if we can improve our prediction.
 
 ###5. Random Forest classification
 
@@ -109,6 +109,8 @@ testPred <- predict(rfModel,dsTesting, type="class")
 testPred
 ```
 
+###6. Conclusion
+The Random Forest algorithm accurately predicts 100% of the validation test cases. However 20 cases is a too small a sample to conclude that the alogorithm will be 99% accurate all the time. It would be good to apply the model to a larger test data set to have a better idea of the true out of sample error rate.
 
 
 
