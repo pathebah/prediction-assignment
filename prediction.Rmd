@@ -1,0 +1,120 @@
+---
+title: "Prediction Assignment"
+author: "Pathe Bah"
+date: "18 April 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+```
+
+## Introduction
+
+The objective of this study is to predict how well people performed different excercises using data from wearable devices.
+
+### 1. Loading the datasets
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+library(dplyr)
+library(caret)
+library(randomForest)
+
+training <- training <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
+
+testing <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
+```
+
+### 2. Cleaning the dataset
+We will select only columns related to acceleration.
+
+```{r}
+#Select features with acceleration data only
+features <- training %>% select(matches(paste(c("belt","forearm","arm","dumbbell"),collapse = "|"))) %>% names()
+trClasse <- data.frame(training$classe)
+dsTraining <- data.frame(apply(training[,features],2,as.numeric))
+features <- c(names(dsTraining[,!is.na(colSums(dsTraining))]))
+
+#Refine the features further to remove zero variance variables
+nzv <- nearZeroVar(dsTraining)
+features <- features[-nzv]
+
+#Refine training and testing dataset to include only the non zero variance features
+dsTraining <- cbind(dsTraining[,features],trClasse)
+names(dsTraining) <- c(features,"classe")
+
+#Final test dataset. This dataset will be used only once to do the final test of the selected model
+dsTesting <- testing[,c(features,"problem_id")]
+```
+
+###3. Splitting the training dataset into another training and testing datasets
+```{r}
+set.seed(12344)
+inTrain <- createDataPartition(y=dsTraining$classe,p=0.6,list=FALSE)
+myTraining <- dsTraining[inTrain,]
+myTesting <- dsTraining[-inTrain,]
+```
+
+###4. Tree classification
+Let us use the rpart algorith to classify the data using a tree. We will then use the model we generate to make predictions on the testing data from the original training set.
+
+```{r}
+#Creating the tree model using the caret package with the rpart method
+treeModel <- rpart(classe~.,method="class",data = myTraining)
+
+#Predit classe outcomes using the model on the testing set that we cut from the training set
+treePred <- predict(treeModel,myTesting,type = "class")
+
+#Create a confusion matrix to test the accuracy of our prediction
+treeCm <- confusionMatrix(treePred,myTesting$classe)
+
+#Display the accuracy metrix of the tree confusion matrix
+treeCm$overall
+```
+
+The tree model is only 72% accurate. This is more than we would get by just flipping a coin but still fairly innacurate. Let us try another alogrithm to see if we can improve our prediction.
+
+###5. Random Forest classification
+
+```{r}
+#Creating the tree model using using the caret package with the rf method
+rfModel <- randomForest(classe~.,data = myTraining,ntree=1000)
+
+#Predit classe outcomes using the model on the testing set that we cut from the training set
+rfPred <- predict(rfModel,myTesting, type="class")
+
+#Create a confusion matrix to test the accuracy of our prediction
+rfCm <- confusionMatrix(rfPred,myTesting$classe)
+
+#Display the accuracy metrix of the resulting Random Forest confusion matrix
+rfCm$overall
+```
+
+The Random Forest algorithm is 99% accurate on test data. However, let us know try it on our validation dataset that we set aside (dsTesting)
+
+```{r}
+#Predit classe outcomes using the model on the final test set
+testPred <- predict(rfModel,dsTesting, type="class")
+
+testPred
+```
+
+
+
+
+
+
+
+
+
+
