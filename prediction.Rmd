@@ -100,7 +100,7 @@ rfCm <- confusionMatrix(rfPred,myTesting$classe)
 rfCm$overall
 ```
 
-The Random Forest algorithm is 99% accurate on test data. However, let us know try it on our validation dataset that we set aside (dsTesting)
+The Random Forest algorithm is 99% accurate on test data. However, let us know try it on our validation dataset (dsTesting)
 
 ```{r}
 #Predit classe outcomes using the model on the final test set
